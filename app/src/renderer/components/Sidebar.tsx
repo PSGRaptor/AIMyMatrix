@@ -1,0 +1,42 @@
+// File: app/src/renderer/components/Sidebar.tsx
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+interface PlatformItem {
+  name: string;
+  icon: string;
+  running: boolean;
+}
+
+export default function Sidebar() {
+  const [platforms, setPlatforms] = useState<PlatformItem[]>([]);
+
+  useEffect(() => {
+    // fetch list of platform descriptors from main‑process
+    window.api.invoke('descriptor:list').then(setPlatforms);
+  }, []);
+
+  const handleToggle = (p: PlatformItem) => {
+    window.api.invoke(p.running ? 'platform:stop' : 'platform:start', p.name);
+    setPlatforms(ps =>
+      ps.map(x => (x.name === p.name ? { ...x, running: !x.running } : x))
+    );
+  };
+
+  return (
+    <aside className="flex flex-col w-56 border-r h-full">
+      {platforms.map(p => (
+        <Button
+          key={p.name}
+          variant={p.running ? 'default' : 'ghost'}
+          className={cn('justify-start gap-2', p.running && 'font-bold')}
+          onClick={() => handleToggle(p)}
+        >
+          <img src={`./icons/${p.icon}`} alt="" className="w-5 h-5" />
+          {p.name}
+        </Button>
+      ))}
+    </aside>
+  );
+}
