@@ -1,12 +1,17 @@
-// ----------------------------------------------
-// Centralised process spawn & life‑cycle manager
+// --------------------------------------------------------------
+// Centralised process-lifecycle manager for every AI platform
 // File: app/src/main/platformManager.ts
-// ----------------------------------------------
+// --------------------------------------------------------------
 
-import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import {
+  ipcMain,
+  IpcMainInvokeEvent,
+  BrowserWindow,
+  app
+} from 'electron';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import fs from 'node:fs';
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 interface PlatformDescriptor {
   name: string;
@@ -19,57 +24,71 @@ interface PlatformDescriptor {
 }
 
 export class PlatformManager {
+  /** Map <platform-name, spawned process> */
   private static processes = new Map<string, ChildProcessWithoutNullStreams>();
 
-  static init(ipc: typeof ipcMain) {
-    ipc.handle('platform:start', (_e: IpcMainInvokeEvent, platformName: string) =>
-      this.start(platformName)
+  /** reference to the single BrowserWindow so we can stream logs */
+  private static mainWindow: BrowserWindow | null = null;
+
+  /** wire IPC handlers – called from main.ts once the window is created */
+  static init(ipc: typeof ipcMain, window: BrowserWindow) {
+    this.mainWindow = window;
+
+    ipc.handle('platform:start', (_e: IpcMainInvokeEvent, name: string) =>
+        this.start(name)
     );
-    ipc.handle('platform:stop', (_e, platformName: string) =>
-      this.stop(platformName)
+    ipc.handle('platform:stop', (_e, name: string) =>
+        this.stop(name)
     );
     ipc.handle('platform:list', () => this.list());
   }
 
-  private static resolveDescriptor(platformName: string): PlatformDescriptor {
+  /** read & parse descriptor JSON for the given platform */
+  private static resolveDescriptor(name: string): PlatformDescriptor {
     const descriptorPath = path.resolve(
-      app.getAppPath(),
-      'platforms',
-      `${platformName}.json`
+        app.getAppPath(),          // packaged: …/resources/app.asar
+        'platforms',
+        `${name}.json`
     );
-    return JSON.parse(fs.readFileSync(descriptorPath, 'utf-8')) as PlatformDescriptor;
+    return JSON.parse(
+        fs.readFileSync(descriptorPath, 'utf-8')
+    ) as PlatformDescriptor;
   }
 
-  static start(platformName: string) {
-    if (this.processes.has(platformName))
-      throw new Error(`${platformName} is already running`);
+  /** spawn platform if not already running */
+  static start(name: string) {
+    if (this.processes.has(name))
+      throw new Error(`${name} is already running`);
 
-    const desc = this.resolveDescriptor(platformName);
+    const desc = this.resolveDescriptor(name);
+
     const proc = spawn(desc.entry, desc.args, {
       cwd: desc.cwd,
       env: { ...process.env, ...desc.env },
       shell: true
     });
 
-    // forward stdout/stderr to renderer
+    // forward stdout/stderr to renderer in real time
     proc.stdout.on('data', data =>
-      mainWindow?.webContents.send('log', platformName, data.toString())
+        this.mainWindow?.webContents.send('log', name, data.toString())
     );
     proc.stderr.on('data', data =>
-      mainWindow?.webContents.send('log', platformName, data.toString())
+        this.mainWindow?.webContents.send('log', name, data.toString())
     );
     proc.on('close', code =>
-      mainWindow?.webContents.send('platform:exit', platformName, code)
+        this.mainWindow?.webContents.send('platform:exit', name, code)
     );
 
-    this.processes.set(platformName, proc);
+    this.processes.set(name, proc);
   }
 
-  static stop(platformName: string) {
-    this.processes.get(platformName)?.kill('SIGINT');
-    this.processes.delete(platformName);
+  /** terminate process and clean map */
+  static stop(name: string) {
+    this.processes.get(name)?.kill('SIGINT');
+    this.processes.delete(name);
   }
 
+  /** list currently running platforms */
   static list() {
     return Array.from(this.processes.keys());
   }

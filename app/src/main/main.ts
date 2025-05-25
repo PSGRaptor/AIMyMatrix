@@ -1,44 +1,43 @@
 // ----------------------------------------------
-// Electron main‑process entry point
+// Electron main-process entry point
 // File: app/src/main/main.ts
 // ----------------------------------------------
 
 import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'node:path';
+import * as path from 'node:path';
 import { PlatformManager } from './platformManager';
 
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
-  // Create the browser window tied to our React front‑end
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     title: 'AIMyMatrix',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'), // context‑isolated bridge
+      preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
 
+  // Load renderer
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
   } else {
-    mainWindow.loadURL('http://localhost:5173'); // Vite dev server
+    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();            // ⬅ optional: remove in prod
   }
 
   mainWindow.on('closed', () => (mainWindow = null));
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
 app.whenReady().then(() => {
   createWindow();
-  PlatformManager.init(ipcMain); // wire IPC handlers
+  // ⚠️  Pass BOTH arguments: the ipcMain object and the BrowserWindow
+  PlatformManager.init(ipcMain, mainWindow!);
 });
 
-// Quit when all windows are closed – except on macOS.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
