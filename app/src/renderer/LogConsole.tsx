@@ -1,31 +1,49 @@
+// --------------------------------------------------------------------
+// LogConsole.tsx  –  streaming stdout/stderr from running platforms
+// Path: app/src/renderer/LogConsole.tsx
+// --------------------------------------------------------------------
+
 import React, { useEffect, useRef, useState } from 'react';
+import { api } from '@/bridge';
+
+interface LogEntry {
+    platform: string;
+    line: string;
+}
 
 export default function LogConsole() {
-    const [lines, setLines] = useState<string[]>(['AIMyMatrix ‑ ready.']);
-    const ref = useRef<HTMLDivElement>(null);
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
 
+    // Append log lines pushed from main-process
     useEffect(() => {
-        const listener = (_name: string, line: string) => {
-            setLines(prev => [...prev, line]);
+        const handler = (platform: string, line: string) => {
+            setLogs((prev) => [...prev, { platform, line }]);
+
+            // Auto-scroll to bottom
+            requestAnimationFrame(() => {
+                containerRef.current?.scrollTo({
+                    top: containerRef.current.scrollHeight,
+                    behavior: 'smooth',
+                });
+            });
         };
-        window.api.on('log', listener);
-        return () => {
-            // @ts‑ignore electron ipc: removeListener overload typed loosely
-            window.api.on('log', listener);
-        };
+
+        api.on('log', handler);
+
+        // No detacher needed: ipcRenderer 'on' returns undefined
+        // Stub bridge prints warnings only in browser.
     }, []);
-
-    useEffect(() => {
-        ref.current?.scrollTo({ top: ref.current.scrollHeight });
-    }, [lines]);
 
     return (
         <div
-            ref={ref}
-            className="flex-1 bg-black text-green-400 font-mono text-xs p-2 overflow-y-auto"
+            ref={containerRef}
+            className="flex-1 overflow-auto p-3 font-mono text-xs bg-neutral-900 text-green-400"
         >
-            {lines.map((l, i) => (
-                <div key={i}>{l}</div>
+            {logs.map((l, i) => (
+                <pre key={i} className="whitespace-pre-wrap">
+          {`[${l.platform}] ${l.line}`}
+        </pre>
             ))}
         </div>
     );

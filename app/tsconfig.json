@@ -15,6 +15,6 @@
   },
   "include": [
     "app/src/**/*",                         // ③ include all TS/TSX in new tree
-    "../vite.config.ts"
+    //"/vite.config.ts"
   ]
 }
