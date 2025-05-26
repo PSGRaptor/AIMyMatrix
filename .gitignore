@@ -1,0 +1,81 @@
+#####################################################################
+# AIMyMatrix — custom .gitignore
+# Generated 26 May 2025
+# Covers: Electron + React + Vite + pnpm + Python side-cars + IntelliJ
+#####################################################################
+
+########################
+# 1· Node / pnpm
+########################
+node_modules/               # content-addressable store lives here
+.pnpm-store/                # pnpm’s global store (if local)
+*.tgz                       # local pnpm pack files
+
+########################
+# 2· Build & packaging
+########################
+# Vite, TypeScript, and Electron outputs
+dist/                       # renderer build (vite build)
+app/dist/                   # alt. build target
+.vite/                      # dev-server cache
+build/                      # electron-builder tmp dir
+release/                    # electron-builder output artifacts
+out/                        # electron-forge / custom scripts
+*.asar*                     # packed app archives
+*.dmg                       # macOS package (when cross-built)
+*.exe                       # Windows installer / portable exe
+*.zip                       # release bundles
+
+########################
+# 3· AI model binaries
+########################
+models/                     # shared checkpoints, LoRAs, ControlNet, etc.
+#   (You can commit small metadata/json inside if needed via negation)
+!models/.keep               # create an empty .keep file if you want folder tracked
+
+########################
+# 4· Python virtual-envs
+########################
+venv/
+.venv/
+env/
+.python-version             # pyenv local marker
+
+########################
+# 5· IDE / editor cruft
+########################
+.idea/                      # IntelliJ IDEA project files
+.vscode/                    # VS Code settings
+*.iml                       # IntelliJ module files
+.DS_Store                   # macOS Finder metadata
+Thumbs.db                   # Windows thumbnail cache
+
+########################
+# 6· Environment & secrets
+########################
+.env
+.env.*                      # .env.local, .env.production, etc.
+
+########################
+# 7· Logs & reports
+########################
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+*.log                       # runtime / electron logs
+coverage/                   # test coverage output
+
+########################
+# 8· OS / tooling miscellany
+########################
+# macOS Spotlight / Trash
+.Spotlight-V100
+.Trashes
+# Windows Recycle Bin
+$RECYCLE.BIN/
+# Linux GNU Stash
+*~
+
+#####################################################################
+# End of .gitignore
+#####################################################################
