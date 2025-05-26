@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2020",
     "module": "ESNext",
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
+    "baseUrl": "app/src/renderer",          // ① new base
+    "paths": {
+      "@/*": ["*"]                          // ② alias same as Vite
+    },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "src/renderer",
-    "paths": {
-      "@/*": ["*"]
-    },
-    "types": ["vite/client"]
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["src", "src/renderer/global.d.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "app/src/**/*",                         // ③ include all TS/TSX in new tree
+    "../vite.config.ts"
+  ]
 }

@@ -21,6 +21,7 @@ app/dist/                   # alt. build target
 build/                      # electron-builder tmp dir
 release/                    # electron-builder output artifacts
 out/                        # electron-forge / custom scripts
+.idea/
 *.asar*                     # packed app archives
 *.dmg                       # macOS package (when cross-built)
 *.exe                       # Windows installer / portable exe

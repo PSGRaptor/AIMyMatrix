@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import PlatformCard from '@/components/PlatformCard';
+import PlatformCard from '@/PlatformCard';
 
 interface PlatformItem { name: string; icon: string; running: boolean; }
 

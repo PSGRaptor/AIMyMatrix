@@ -1,6 +1,6 @@
 import React from 'react';
-import Sidebar from '@/components/Sidebar';
-import LogConsole from '@/components/LogConsole';
+import Sidebar from '@/Sidebar';
+import LogConsole from '@/LogConsole';
 
 export default function App() {
     return (
