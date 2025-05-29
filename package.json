@@ -4,11 +4,12 @@
   "type": "commonjs",
   "main": "app/src/main/main.ts",
   "scripts": {
-    "electron-dev": "cross-env ELECTRON_ENABLE_LOGGING=1 ELECTRON_ENABLE_STACK_DUMPING=1 pnpm exec electron app/src/main/bootstrap.js",
+    "electron-dev": "cross-env ELECTRON_ENABLE_LOGGING=1 ELECTRON_ENABLE_STACK_DUMPING=1 pnpm exec electron --disable-gpu --disable-gpu-compositing app/src/main/bootstrap.js",
     "dev": "concurrently \"vite\" \"npm run electron-dev\""
   },
   "dependencies": {
     "electron": "^31.0.0",
+    "lucide-react": "^0.511.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

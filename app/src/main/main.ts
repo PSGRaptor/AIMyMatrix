@@ -1,11 +1,9 @@
-// ----------------------------------------------
-// Electron main-process entry point
-// File: app/src/main/main.ts
-// ----------------------------------------------
-
 import { app, BrowserWindow, ipcMain } from 'electron';
+
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-compositing');
+
 import * as path from 'node:path';
 import { PlatformManager } from './platformManager';
 import { listDescriptors } from './descriptorService';
