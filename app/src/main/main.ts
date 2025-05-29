@@ -5,8 +5,8 @@
 
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'node:path';
-import { PlatformManager } from './platformManager';
-import { listDescriptors } from './descriptorService';
+import { PlatformManager } from './platformManager.ts';
+import { listDescriptors } from './descriptorService.ts';
 ipcMain.handle('descriptor:list', () => listDescriptors());
 
 let mainWindow: BrowserWindow | null = null;

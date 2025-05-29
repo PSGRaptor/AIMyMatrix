@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      electron:
+        specifier: ^31.0.0
+        version: 31.7.7
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -27,12 +30,9 @@ importers:
       concurrently:
         specifier: ^9.1.2
         version: 9.1.2
-      cross-env:
+      cross-env-shell:
         specifier: ^7.0.3
         version: 7.0.3
-      electron:
-        specifier: '31'
-        version: 31.7.7
       electron-builder:
         specifier: ^26.0.12
         version: 26.0.12(electron-builder-squirrel-windows@26.0.12)
@@ -812,9 +812,8 @@ packages:
   cross-dirname@0.1.0:
     resolution: {integrity: sha512-+R08/oI0nl3vfPcqftZRpytksBXDzOUveBq/NBVx0sUp1axwzPQrKinNx5yd5sxPu8j1wIy8AfnVQ+5eFdha6Q==}
 
-  cross-env@7.0.3:
-    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
-    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+  cross-env-shell@7.0.3:
+    resolution: {integrity: sha512-ZEtnHInQRRzuAbmMpUqu/mk1jaZun14WdcmnpzZZ6Bpi1BLTPkbKioQ6+wkFssf+m/DpdttDpsCX6g8zU9W40A==}
     hasBin: true
 
   cross-spawn@7.0.6:
@@ -2729,9 +2728,7 @@ snapshots:
   cross-dirname@0.1.0:
     optional: true
 
-  cross-env@7.0.3:
-    dependencies:
-      cross-spawn: 7.0.6
+  cross-env-shell@7.0.3: {}
 
   cross-spawn@7.0.6:
     dependencies:
