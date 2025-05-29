@@ -1,19 +1,20 @@
-// --------------------------------------------------
-// Returns all platform descriptor JSON files as JS objects
-// File: app/src/main/descriptorService.ts
-// --------------------------------------------------
-import * as fs from 'node:fs';
+// app/src/main/descriptorService.ts
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import * as path from 'node:path';
-import { app } from 'electron';
 
-export interface DescriptorSummary { name: string; icon: string; }
+export function listDescriptors() {
+    const dir = path.resolve(__dirname, 'platforms');
 
-export function listDescriptors(): DescriptorSummary[] {
-    const dir = path.resolve(app.getAppPath(), 'platforms');
-    return fs.readdirSync(dir)
-        .filter(f => f.endsWith('.json'))
-        .map(f => {
-            const p = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8'));
-            return { name: p.name, icon: p.icon } as DescriptorSummary;
+    /* NEW: if folder missing, return empty list instead of throwing */
+    if (!existsSync(dir)) {
+        console.warn('[descriptorService] platforms folder not found:', dir);
+        return [];
+    }
+
+    return readdirSync(dir)
+        .filter((f) => f.endsWith('.json'))
+        .map((file) => {
+            const raw = readFileSync(path.join(dir, file), 'utf8');
+            return JSON.parse(raw);
         });
 }

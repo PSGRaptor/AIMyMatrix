@@ -4,9 +4,11 @@
 // ----------------------------------------------
 
 import { app, BrowserWindow, ipcMain } from 'electron';
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu');
 import * as path from 'node:path';
-import { PlatformManager } from './platformManager.ts';
-import { listDescriptors } from './descriptorService.ts';
+import { PlatformManager } from './platformManager';
+import { listDescriptors } from './descriptorService';
 ipcMain.handle('descriptor:list', () => listDescriptors());
 
 let mainWindow: BrowserWindow | null = null;

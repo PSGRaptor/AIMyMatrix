@@ -1,0 +1,6 @@
+{
+  "name": "InvokeAI",
+  "icon": "🤖",
+  "command": "invoke.sh",
+  "cwd": "F:/invokeAI"
+}
