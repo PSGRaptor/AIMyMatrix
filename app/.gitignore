@@ -1,1 +1,9 @@
 .idea/
+node_modules/
+dist/
+*.exe
+*.zip
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+package-lock.json
