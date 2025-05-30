@@ -1,14 +1,14 @@
-// --------------------------------------------------------------------
-// bridge.ts — renderer → preload bridge
-// Path: app/src/renderer/bridge.ts
-// --------------------------------------------------------------------
 declare global {
     interface Window {
-        api: {
-            invoke: <T = unknown>(channel: string, ...args: any[]) => Promise<T>;
-            on: (channel: string, callback: (...args: any[]) => void) => void;
+        api?: {
+            invoke: (...args: any[]) => Promise<any>;
+            on: (...args: any[]) => void;
         };
     }
 }
 
-export const api = window.api;
+export const api =
+    window.api || {
+        invoke: async () => {},
+        on: () => {},
+    };
