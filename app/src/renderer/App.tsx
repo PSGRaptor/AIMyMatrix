@@ -1,36 +1,60 @@
-// --------------------------------------------------------------------
-// App.tsx  –  root layout: Sidebar, Main content, LogConsole, SettingsDrawer
-// Path: app/src/renderer/App.tsx
-// --------------------------------------------------------------------
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import Header from '@/Header';
 import Sidebar from '@/Sidebar';
 import LogConsole from '@/LogConsole';
 import SettingsDrawer from '@/SettingsDrawer';
+import PlatformCard from '@/PlatformCard';
+import { api } from '@/bridge';
+import { usePlatformStore } from './store';
+import type { PlatformItem } from '@common/ipcTypes';
 
 export default function App() {
     const [isSettingsOpen, setSettingsOpen] = useState(false);
+    const platforms = usePlatformStore((s) => s.platforms);
+    const toggleRunning = usePlatformStore((s) => s.toggleRunning);
+    const loadDescriptors = usePlatformStore((s) => s.loadDescriptors);
+
+    const handleSettingsClose = useCallback(() => {
+        setSettingsOpen(false);
+        loadDescriptors();
+    }, [loadDescriptors]);
 
     return (
-        <div className="h-screen flex overflow-hidden">
-            {/* Left: navigation */}
-            <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
+        <div className="flex flex-col h-full">
+            <Header />
 
-            {/* Center: main content area */}
-            <main className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
-                <div className="flex items-center justify-center h-full text-gray-400">
-                    <p>Select a tool from the sidebar to begin.</p>
-                </div>
-            </main>
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar stays narrow and only has nav/settings */}
+                <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
 
-            {/* Right: log console */}
-            <div className="w-96 border-l h-full">
-                <LogConsole />
+                {/* Main content: grid of cards */}
+                <main className="flex-1 p-6 overflow-auto">
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                        {platforms.map((p: PlatformItem) => (
+                            <PlatformCard
+                                key={p.name}
+                                {...p}
+                                onClick={() => {
+                                    api.invoke(
+                                        p.running ? 'platform:stop' : 'platform:start',
+                                        p.name
+                                    );
+                                    toggleRunning(p.name);
+                                }}
+                                onUpdate={() => api.invoke('descriptor:update', p.name)}
+                            />
+                        ))}
+                    </div>
+                </main>
+
+                <aside className="w-96 border-l h-full">
+                    <LogConsole />
+                </aside>
             </div>
 
-            {/* Settings drawer overlay */}
             <SettingsDrawer
                 isOpen={isSettingsOpen}
-                onClose={() => setSettingsOpen(false)}
+                onClose={handleSettingsClose}
             />
         </div>
     );
