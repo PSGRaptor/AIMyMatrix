@@ -4,11 +4,11 @@ import * as path from 'path';
 
 export default defineConfig({
     root: path.resolve(__dirname, 'app'),
+    publicDir: path.resolve(__dirname, 'app/public'),
     build: {
         outDir: path.resolve(__dirname, 'dist'),
         emptyOutDir: true,
     },
-    publicDir: path.resolve(__dirname, 'app/public'), // for icons
     plugins: [react()],
     resolve: {
         alias: {

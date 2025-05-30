@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+
+    <!--
+      Content Security Policy
+      • default-src 'self'               ← only load resources from this origin
+      • script-src 'self' 'unsafe-eval'  ← allow eval for Vite HMR in dev
+      • connect-src 'self' http://localhost:5173 ws://localhost:5173
+                                          ← allow HMR websocket traffic
+      • style-src 'self' 'unsafe-inline' ← allow Tailwind inline styles
+      • img-src 'self' data:             ← allow data-URI icons, etc.
+      • font-src 'self' data:            ← embedded fonts
+    -->
+    <meta
+            http-equiv="Content-Security-Policy"
+            content="
+        default-src 'self';
+        script-src 'self' 'unsafe-eval';
+        connect-src 'self' http://localhost:5173 ws://localhost:5173;
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        font-src 'self' data:;"
+    />
+
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>AIMyMatrix</title>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/renderer/main.tsx"></script>
+</body>
+</html>

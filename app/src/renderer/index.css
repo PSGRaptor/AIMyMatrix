@@ -2,4 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root { height: 100%; }
+/* your gradient etc… */
+html, body, #root {
+    @apply h-full;
+    background: linear-gradient(to bottom right, theme(colors.indigo.50), theme(colors.white));
+}
+.dark html, .dark body, .dark #root {
+    background: linear-gradient(to bottom right, theme(colors.gray.900), theme(colors.gray.800));
+}

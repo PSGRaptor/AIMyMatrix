@@ -1,95 +1,66 @@
-// --------------------------------------------------------------
-// Centralised process-lifecycle manager for every AI platform
-// File: app/src/main/platformManager.ts
-// --------------------------------------------------------------
-
-import {
-  ipcMain,
-  IpcMainInvokeEvent,
-  BrowserWindow,
-  app
-} from 'electron';
+// --------------------------------------------------------------------
+// platformManager.ts  –  manage start/stop of tool processes
+// Path: app/src/main/platformManager.ts
+// --------------------------------------------------------------------
+import { IpcMain, BrowserWindow } from 'electron';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
-interface PlatformDescriptor {
-  name: string;
-  entry: string;
-  cwd: string;
-  args: string[];
-  env: Record<string, string>;
-  icon: string;
-  gpu: boolean;
-}
+import { listDescriptors } from './descriptorService';
 
 export class PlatformManager {
-  /** Map <platform-name, spawned process> */
+  // Map from platform name → its spawned ChildProcess
   private static processes = new Map<string, ChildProcessWithoutNullStreams>();
 
-  /** reference to the single BrowserWindow so we can stream logs */
-  private static mainWindow: BrowserWindow | null = null;
+  static init(ipcMain: IpcMain, window: BrowserWindow) {
+    ipcMain.handle('platform:start', async (_e, name: string) => {
+      const descriptor = listDescriptors().find((d) => d.name === name);
+      if (!descriptor) {
+        throw new Error(`Descriptor not found for platform "${name}"`);
+      }
+      if (!descriptor.command) {
+        throw new Error(
+            `No "command" defined in descriptor for "${name}"`
+        );
+      }
 
-  /** wire IPC handlers – called from main.ts once the window is created */
-  static init(ipc: typeof ipcMain, window: BrowserWindow) {
-    this.mainWindow = window;
+      const cwd = descriptor.cwd ?? process.cwd();
+      const cmd = descriptor.command;
 
-    ipc.handle('platform:start', (_e: IpcMainInvokeEvent, name: string) =>
-        this.start(name)
-    );
-    ipc.handle('platform:stop', (_e, name: string) =>
-        this.stop(name)
-    );
-    ipc.handle('platform:list', () => this.list());
-  }
+      // Spawn with stdout/stderr always piped (no nulls)
+      const child: ChildProcessWithoutNullStreams = cmd.endsWith('.bat') ||
+      cmd.endsWith('.cmd')
+          ? spawn('cmd.exe', ['/c', cmd], {
+            cwd,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          })
+          : spawn(cmd, [], {
+            cwd,
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
 
-  /** read & parse descriptor JSON for the given platform */
-  private static resolveDescriptor(name: string): PlatformDescriptor {
-    const descriptorPath = path.resolve(
-        app.getAppPath(),          // packaged: …/resources/app.asar
-        'platforms',
-        `${name}.json`
-    );
-    return JSON.parse(
-        fs.readFileSync(descriptorPath, 'utf-8')
-    ) as PlatformDescriptor;
-  }
+      this.processes.set(name, child);
 
-  /** spawn platform if not already running */
-  static start(name: string) {
-    if (this.processes.has(name))
-      throw new Error(`${name} is already running`);
+      child.stdout.on('data', (chunk: Buffer) => {
+        window.webContents.send('log', name, chunk.toString());
+      });
+      child.stderr.on('data', (chunk: Buffer) => {
+        window.webContents.send('log', name, chunk.toString());
+      });
 
-    const desc = this.resolveDescriptor(name);
+      child.on('exit', () => {
+        this.processes.delete(name);
+        window.webContents.send('platform:stopped', name);
+      });
 
-    const proc = spawn(desc.entry, desc.args, {
-      cwd: desc.cwd,
-      env: { ...process.env, ...desc.env },
-      shell: true
+      return true;
     });
 
-    // forward stdout/stderr to renderer in real time
-    proc.stdout.on('data', data =>
-        this.mainWindow?.webContents.send('log', name, data.toString())
-    );
-    proc.stderr.on('data', data =>
-        this.mainWindow?.webContents.send('log', name, data.toString())
-    );
-    proc.on('close', code =>
-        this.mainWindow?.webContents.send('platform:exit', name, code)
-    );
-
-    this.processes.set(name, proc);
-  }
-
-  /** terminate process and clean map */
-  static stop(name: string) {
-    this.processes.get(name)?.kill('SIGINT');
-    this.processes.delete(name);
-  }
-
-  /** list currently running platforms */
-  static list() {
-    return Array.from(this.processes.keys());
+    ipcMain.handle('platform:stop', async (_e, name: string) => {
+      const child = this.processes.get(name);
+      if (!child) {
+        return false;
+      }
+      child.kill();
+      return true;
+    });
   }
 }

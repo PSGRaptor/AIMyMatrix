@@ -1,13 +1,28 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+// --------------------------------------------------------------------
+// main.ts  –  Electron main-process entry point
+// Path: app/src/main/main.ts
+// --------------------------------------------------------------------
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import * as path from 'node:path';
+import { PlatformManager } from './platformManager';
+import { listDescriptors, addDescriptor } from './descriptorService';
 
+// ─── 🛑 GPU DISABLED BEFORE READY 🛑 ───────────────────────────────
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-gpu-compositing');
+// ────────────────────────────────────────────────────────────────
 
-import * as path from 'node:path';
-import { PlatformManager } from './platformManager';
-import { listDescriptors } from './descriptorService';
 ipcMain.handle('descriptor:list', () => listDescriptors());
+ipcMain.handle('descriptor:add', (_e, desc) => addDescriptor(desc));
+ipcMain.handle('dialog:openFile', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'Executable', extensions: ['bat', 'exe', 'cmd', 'sh'] }],
+  });
+  if (result.canceled) return null;
+  return result.filePaths[0];
+});
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -19,24 +34,24 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
 
-  // Load renderer
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
   } else {
     mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();            // ⬅ optional: remove in prod
+    mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.on('closed', () => (mainWindow = null));
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
   createWindow();
-  // ⚠️  Pass BOTH arguments: the ipcMain object and the BrowserWindow
   PlatformManager.init(ipcMain, mainWindow!);
 });
 
