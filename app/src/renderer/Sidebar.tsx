@@ -1,62 +1,48 @@
 // --------------------------------------------------------------------
-// Sidebar.tsx  –  lists tools + Settings button
+// Sidebar.tsx — navigates platforms + opens Settings
 // Path: app/src/renderer/Sidebar.tsx
 // --------------------------------------------------------------------
-import React, { useEffect, useState } from 'react';
-import PlatformCard from '@/PlatformCard';
+import React, { useEffect } from 'react';
 import { api } from '@/bridge';
-
-interface PlatformItem {
-  name: string;
-  icon: string;
-  running: boolean;
-}
+import PlatformCard from '@/PlatformCard';
+import { usePlatformStore } from './store';
+import type { PlatformItem } from '@common/ipcTypes';
 
 interface SidebarProps {
-  onOpenSettings: () => void;
+    onOpenSettings: () => void;
 }
 
 export default function Sidebar({ onOpenSettings }: SidebarProps) {
-  const [platforms, setPlatforms] = useState<PlatformItem[]>([]);
+    const platforms = usePlatformStore((state) => state.platforms);
+    const loadDescriptors = usePlatformStore((state) => state.loadDescriptors);
+    const toggleRunning = usePlatformStore((state) => state.toggleRunning);
 
-  // Fetch the list of descriptors
-  useEffect(() => {
-    api
-        .invoke('descriptor:list')
-        .then((list: PlatformItem[] | undefined) => {
-          if (Array.isArray(list)) {
-            setPlatforms(list.map((p) => ({ ...p, running: false })));
-          }
-        })
-        .catch((err) => console.error('descriptor:list failed', err));
-  }, []);
+    useEffect(() => {
+        loadDescriptors();
+    }, [loadDescriptors]);
 
-  const toggle = (p: PlatformItem) => {
-    api.invoke(p.running ? 'platform:stop' : 'platform:start', p.name);
-    setPlatforms((prev) =>
-        prev.map((x) =>
-            x.name === p.name ? { ...x, running: !x.running } : x
-        )
+    return (
+        <aside className="flex flex-col w-56 border-r h-full p-2 gap-2 bg-white dark:bg-gray-800">
+            {platforms.map((platform: PlatformItem) => (
+                <PlatformCard
+                    key={platform.name}
+                    {...platform}
+                    onClick={() => {
+                        api.invoke(
+                            platform.running ? 'platform:stop' : 'platform:start',
+                            platform.name
+                        );
+                        toggleRunning(platform.name);
+                    }}
+                />
+            ))}
+
+            <button
+                className="mt-auto px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                onClick={onOpenSettings}
+            >
+                Settings
+            </button>
+        </aside>
     );
-  };
-
-  return (
-      <aside className="flex flex-col w-56 border-r h-full p-2 gap-2 bg-white dark:bg-gray-800">
-        {platforms.map((p) => (
-            <PlatformCard
-                key={p.name}
-                {...p}
-                onClick={() => toggle(p)}
-            />
-        ))}
-
-        {/* Settings button at bottom */}
-        <button
-            className="mt-auto px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-            onClick={onOpenSettings}
-        >
-          Settings
-        </button>
-      </aside>
-  );
 }
