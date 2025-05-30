@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": "./app",
+    "paths": {
+      "@/*": ["app/src/renderer/*"],
+      "@common/*": ["app/src/common/*"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "app/src/renderer/**/*",
+    "app/src/**/*"
+  ]
+}
