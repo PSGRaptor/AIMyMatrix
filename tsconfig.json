@@ -6,18 +6,16 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "allowImportingTsExtensions": true,
-    "baseUrl": "./app",
+
+    "baseUrl": ".",
     "paths": {
       "@/*": ["app/src/renderer/*"],
       "@common/*": ["app/src/common/*"]
     },
+
     "strict": true,
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": [
-    "app/src/renderer/**/*",
-    "app/src/**/*"
-  ]
+  "include": ["app/src/**/*"]
 }

@@ -1,16 +1,14 @@
-type IpcBridge = {
-    invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
-    on: (channel: string, listener: (...a: unknown[]) => void) => void;
-};
+// --------------------------------------------------------------------
+// bridge.ts — renderer → preload bridge
+// Path: app/src/renderer/bridge.ts
+// --------------------------------------------------------------------
+declare global {
+    interface Window {
+        api: {
+            invoke: <T = unknown>(channel: string, ...args: any[]) => Promise<T>;
+            on: (channel: string, callback: (...args: any[]) => void) => void;
+        };
+    }
+}
 
-// Real bridge in Electron, no-op stub in browser
-export const api: IpcBridge =
-    (window as any).api ?? {
-        invoke: async () => {
-            console.warn('[ipc-stub] invoke called outside Electron');
-            return undefined;
-        },
-        on: () => {
-            console.warn('[ipc-stub] on called outside Electron');
-        },
-    };
+export const api = window.api;
