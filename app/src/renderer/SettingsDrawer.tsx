@@ -17,25 +17,45 @@ export default function SettingsDrawer({
                                            isOpen,
                                            onClose,
                                        }: SettingsDrawerProps) {
-    const [name, setName] = useState<string>('');
-    const [icon, setIcon] = useState<string>('');
-    const [command, setCommand] = useState<string>('');
-    const [cwd, setCwd] = useState<string>('');
-    const [description, setDescription] = useState<string>('');
-    const [updateMethod, setUpdateMethod] = useState<string>('');
+    const [name, setName] = useState('');
+    const [icon, setIcon] = useState('');
+    const [command, setCommand] = useState('');
+    const [cwd, setCwd] = useState('');
+    const [description, setDescription] = useState('');
+    const [updateMethod, setUpdateMethod] = useState('');
     const loadDescriptors = usePlatformStore((state) => state.loadDescriptors);
 
     if (!isOpen) return null;
 
-    const browseFile = async (): Promise<void> => {
-        const filePath = await api.invoke<string | null>('dialog:openFile');
+    // Browse for icon file
+    const browseIcon = async (): Promise<void> => {
+        const filePath = await api.invoke('dialog:openFile', { type: 'image' });
+        if (filePath) setIcon(filePath);
+    };
+
+    // Browse for working directory
+    const browseDirectory = async (): Promise<void> => {
+        const dirPath = await api.invoke('dialog:openFile', { type: 'dir' });
+        if (dirPath) setCwd(dirPath);
+    };
+
+    // Browse for command (.bat, .cmd, .exe, .sh, etc.)
+    const browseCommand = async (): Promise<void> => {
+        const filePath = await api.invoke('dialog:openFile', { type: 'bat' });
         if (filePath) {
             setCommand(filePath);
+            // Set working directory as directory containing the file
             setCwd(filePath.replace(/[/\\][^/\\]+$/, ''));
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    // Browse for update script
+    const browseUpdateMethod = async (): Promise<void> => {
+        const filePath = await api.invoke('dialog:openFile', { type: 'bat' });
+        if (filePath) setUpdateMethod(filePath);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const desc: PlatformDescriptor = {
             name,
@@ -46,7 +66,7 @@ export default function SettingsDrawer({
             updateMethod,
         };
         try {
-            await api.invoke<PlatformDescriptor[]>('descriptor:add', desc);
+            await api.invoke('descriptor:add', desc);
             loadDescriptors();
             onClose();
         } catch (err) {
@@ -62,7 +82,7 @@ export default function SettingsDrawer({
             />
             <div className="relative ml-auto w-80 h-full bg-white dark:bg-gray-900 shadow-lg p-4 overflow-auto">
                 <button
-                    className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 dark:hover:text-white"
+                    className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white"
                     onClick={onClose}
                 >
                     <X size={20} />
@@ -71,48 +91,93 @@ export default function SettingsDrawer({
                     Add New Tool
                 </h2>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                    {[
-                        { label: 'Name', value: name, setter: setName, required: true },
-                        { label: 'Icon (emoji or URL)', value: icon, setter: setIcon },
-                        { label: 'Working Directory', value: cwd, setter: setCwd, required: true },
-                        { label: 'Description', value: description, setter: setDescription },
-                        { label: 'Update method (URL or script)', value: updateMethod, setter: setUpdateMethod },
-                    ].map(({ label, value, setter, required }) => (
-                        <label
-                            key={label}
-                            className="flex flex-col text-sm text-gray-700 dark:text-gray-300"
-                        >
-                            {label}
-                            {label === 'Description' ? (
-                                <textarea
-                                    className="mt-1 p-2 border rounded"
-                                    rows={2}
-                                    value={value}
-                                    onChange={(e) => setter(e.target.value)}
-                                />
-                            ) : (
-                                <input
-                                    required={required}
-                                    className="mt-1 p-2 border rounded"
-                                    value={value}
-                                    onChange={(e) => setter(e.target.value)}
-                                />
-                            )}
-                        </label>
-                    ))}
                     <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
-                        Command (bat file)
+                        Name
+                        <input
+                            required
+                            className="mt-1 p-2 border rounded text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                    </label>
+                    <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
+                        Icon (emoji or file URL)
                         <div className="flex">
                             <input
-                                required
-                                className="flex-1 mt-1 p-2 border rounded-l"
-                                value={command}
-                                onChange={(e) => setCommand(e.target.value)}
+                                className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                                value={icon}
+                                onChange={(e) => setIcon(e.target.value)}
+                                placeholder="Emoji or file path"
                             />
                             <button
                                 type="button"
-                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r"
-                                onClick={browseFile}
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                onClick={browseIcon}
+                            >
+                                Browse
+                            </button>
+                        </div>
+                    </label>
+                    <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
+                        Working Directory
+                        <div className="flex">
+                            <input
+                                required
+                                className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                                value={cwd}
+                                onChange={(e) => setCwd(e.target.value)}
+                                placeholder="Working directory"
+                            />
+                            <button
+                                type="button"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                onClick={browseDirectory}
+                            >
+                                Browse
+                            </button>
+                        </div>
+                    </label>
+                    <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
+                        Command (bat/cmd/exe/sh)
+                        <div className="flex">
+                            <input
+                                required
+                                className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                                value={command}
+                                onChange={(e) => setCommand(e.target.value)}
+                                placeholder="Launch script or file"
+                            />
+                            <button
+                                type="button"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                onClick={browseCommand}
+                            >
+                                Browse
+                            </button>
+                        </div>
+                    </label>
+                    <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
+                        Description
+                        <textarea
+                            className="mt-1 p-2 border rounded text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                            rows={2}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </label>
+                    <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
+                        Update method (URL or script)
+                        <div className="flex">
+                            <input
+                                className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                                value={updateMethod}
+                                onChange={(e) => setUpdateMethod(e.target.value)}
+                                placeholder="Script or URL"
+                            />
+                            <button
+                                type="button"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                onClick={browseUpdateMethod}
                             >
                                 Browse
                             </button>

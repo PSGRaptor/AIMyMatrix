@@ -1,9 +1,20 @@
 import React from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import type { PlatformItem } from '@common/ipcTypes';
 
 interface PlatformCardProps extends PlatformItem {
     onClick: () => void;
     onUpdate: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+function resolveIconUrl(icon: string) {
+    // Is it an absolute local path (windows or unix)?
+    if (/^[a-zA-Z]:[\\/]/.test(icon) || icon.startsWith('/')) {
+        return `file://${icon.replace(/\\/g, '/')}`;
+    }
+    return icon; // emoji or http/https
 }
 
 export default function PlatformCard({
@@ -13,27 +24,42 @@ export default function PlatformCard({
                                          running,
                                          onClick,
                                          onUpdate,
+                                         onEdit,
+                                         onDelete,
                                      }: PlatformCardProps) {
     return (
-        <div className="w-full max-w-xs bg-white dark:bg-gray-800 rounded-2xl shadow hover:shadow-xl transition-shadow duration-200 flex flex-col">
-            {/* Logo & text */}
+        <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow hover:shadow-xl transition-shadow duration-200 flex flex-col relative">
+            <div className="absolute top-3 right-3 flex gap-1">
+                <button
+                    onClick={onEdit}
+                    className="p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-700 transition"
+                    title="Edit"
+                >
+                    <Pencil size={18} className="text-indigo-600 dark:text-indigo-300" />
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 transition"
+                    title="Delete"
+                >
+                    <Trash2 size={18} className="text-red-500 dark:text-red-300" />
+                </button>
+            </div>
             <div className="flex items-start p-4">
                 <img
-                    src={icon}
+                    src={resolveIconUrl(icon)}
                     alt={`${name} logo`}
                     className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                 />
                 <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {name}
                     </h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                         {description || 'No description provided.'}
                     </p>
                 </div>
             </div>
-
-            {/* Actions */}
             <div className="mt-auto px-4 pb-4 flex items-center justify-between">
                 <button
                     onClick={onClick}

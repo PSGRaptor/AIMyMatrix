@@ -1,18 +1,27 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Header from '@/Header';
 import Sidebar from '@/Sidebar';
 import LogConsole from '@/LogConsole';
 import SettingsDrawer from '@/SettingsDrawer';
 import PlatformCard from '@/PlatformCard';
-import { api } from '@/bridge';
+import EditPlatformModal from '@/EditPlatformModal';
 import { usePlatformStore } from './store';
+import { api } from '@/bridge';
 import type { PlatformItem } from '@common/ipcTypes';
 
 export default function App() {
     const [isSettingsOpen, setSettingsOpen] = useState(false);
+    const [editing, setEditing] = useState<PlatformItem | null>(null);
     const platforms = usePlatformStore((s) => s.platforms);
     const toggleRunning = usePlatformStore((s) => s.toggleRunning);
     const loadDescriptors = usePlatformStore((s) => s.loadDescriptors);
+    const deletePlatform = usePlatformStore((s) => s.deletePlatform);
+    const updatePlatform = usePlatformStore((s) => s.updatePlatform);
+
+    // Load platform cards on app start
+    useEffect(() => {
+        loadDescriptors();
+    }, [loadDescriptors]);
 
     const handleSettingsClose = useCallback(() => {
         setSettingsOpen(false);
@@ -22,14 +31,11 @@ export default function App() {
     return (
         <div className="flex flex-col h-full">
             <Header />
-
             <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar stays narrow and only has nav/settings */}
                 <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
-
                 {/* Main content: grid of cards */}
                 <main className="flex-1 p-6 overflow-auto">
-                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
                         {platforms.map((p: PlatformItem) => (
                             <PlatformCard
                                 key={p.name}
@@ -42,20 +48,36 @@ export default function App() {
                                     toggleRunning(p.name);
                                 }}
                                 onUpdate={() => api.invoke('descriptor:update', p.name)}
+                                onEdit={() => setEditing(p)}
+                                onDelete={() => deletePlatform(p.name)}
                             />
                         ))}
                     </div>
                 </main>
-
                 <aside className="w-96 border-l h-full">
                     <LogConsole />
                 </aside>
             </div>
-
             <SettingsDrawer
                 isOpen={isSettingsOpen}
                 onClose={handleSettingsClose}
             />
+            {/* Edit Platform Modal */}
+            {editing && (
+                <EditPlatformModal
+                    platform={editing}
+                    onClose={() => setEditing(null)}
+                    onSave={async (updated) => {
+                        await updatePlatform(updated);
+                        setEditing(null);
+                        loadDescriptors();
+                    }}
+                    onDelete={() => {
+                        deletePlatform(editing.name);
+                        setEditing(null);
+                    }}
+                />
+            )}
         </div>
     );
 }
