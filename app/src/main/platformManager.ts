@@ -5,6 +5,8 @@
 import { IpcMain, BrowserWindow } from 'electron';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { listDescriptors } from './descriptorService';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 export class PlatformManager {
   // Map from platform name → its spawned ChildProcess
@@ -17,25 +19,23 @@ export class PlatformManager {
         throw new Error(`Descriptor not found for platform "${name}"`);
       }
       if (!descriptor.command) {
-        throw new Error(
-            `No "command" defined in descriptor for "${name}"`
-        );
+        throw new Error(`No "command" defined in descriptor for "${name}"`);
       }
 
       const cwd = descriptor.cwd ?? process.cwd();
       const cmd = descriptor.command;
 
-      // Spawn with stdout/stderr always piped (no nulls)
-      const child: ChildProcessWithoutNullStreams = cmd.endsWith('.bat') ||
-      cmd.endsWith('.cmd')
-          ? spawn('cmd.exe', ['/c', cmd], {
-            cwd,
-            stdio: ['ignore', 'pipe', 'pipe'],
-          })
-          : spawn(cmd, [], {
-            cwd,
-            stdio: ['ignore', 'pipe', 'pipe'],
-          });
+      // Always spawn with stdio: 'pipe' to get ChildProcessWithoutNullStreams
+      const child: ChildProcessWithoutNullStreams =
+          cmd.endsWith('.bat') || cmd.endsWith('.cmd')
+              ? spawn('cmd.exe', ['/c', cmd], {
+                cwd,
+                stdio: ['pipe', 'pipe', 'pipe'],
+              })
+              : spawn(cmd, [], {
+                cwd,
+                stdio: ['pipe', 'pipe', 'pipe'],
+              });
 
       this.processes.set(name, child);
 
@@ -61,6 +61,18 @@ export class PlatformManager {
       }
       child.kill();
       return true;
+    });
+
+    ipcMain.handle('descriptor:delete', async (_event, name: string) => {
+      // Remove the platform config file
+      try {
+        const descriptorPath = path.join(__dirname, 'platforms', `${name}.json`);
+        fs.unlinkSync(descriptorPath);
+        return { success: true };
+      } catch (e) {
+        console.error('Failed to delete platform descriptor:', e);
+        return { success: false, error: e };
+      }
     });
   }
 }
