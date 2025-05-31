@@ -29,32 +29,38 @@ export default function App() {
     }, [loadDescriptors]);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-screen w-screen bg-gray-50 dark:bg-gray-900">
             <Header />
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
                 {/* Main content: grid of cards */}
-                <main className="flex-1 p-6 overflow-auto">
+                <main className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-                        {platforms.map((p: PlatformItem) => (
-                            <PlatformCard
-                                key={p.name}
-                                {...p}
-                                onClick={() => {
-                                    api.invoke(
-                                        p.running ? 'platform:stop' : 'platform:start',
-                                        p.name
-                                    );
-                                    toggleRunning(p.name);
-                                }}
-                                onUpdate={() => api.invoke('descriptor:update', p.name)}
-                                onEdit={() => setEditing(p)}
-                                onDelete={() => deletePlatform(p.name)}
-                            />
-                        ))}
+                        {platforms.length === 0 ? (
+                            <div className="col-span-full text-center text-gray-500 dark:text-gray-400 mt-20 text-lg">
+                                No platforms configured yet. Click the <span className="font-semibold">Settings</span> icon to add a tool.
+                            </div>
+                        ) : (
+                            platforms.map((p: PlatformItem) => (
+                                <PlatformCard
+                                    key={p.name}
+                                    {...p}
+                                    onClick={() => {
+                                        api.invoke(
+                                            p.running ? 'platform:stop' : 'platform:start',
+                                            p.name
+                                        );
+                                        toggleRunning(p.name);
+                                    }}
+                                    onUpdate={() => api.invoke('descriptor:update', p.name)}
+                                    onEdit={() => setEditing(p)}
+                                    onDelete={() => deletePlatform(p.name)}
+                                />
+                            ))
+                        )}
                     </div>
                 </main>
-                <aside className="w-96 border-l h-full">
+                <aside className="w-96 border-l h-full bg-white dark:bg-gray-900">
                     <LogConsole />
                 </aside>
             </div>

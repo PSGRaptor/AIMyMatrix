@@ -1,15 +1,20 @@
 {
   "name": "aimy-matrix",
+  "version": "0.0.1",
+  "description": "AIMyMatrix: Desktop AI Matrix Tool",
+  "author": "Badaxiom",
   "private": true,
   "type": "commonjs",
   "main": "app/src/main/main.ts",
   "scripts": {
     "vite": "vite",
+    "build": "vite build",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
     "electron-dev": "pnpm exec wait-on http://localhost:5173 && cross-env ELECTRON_ENABLE_LOGGING=1 ELECTRON_ENABLE_STACK_DUMPING=1 electron app/src/main/bootstrap.js",
     "dev": "concurrently \"pnpm run vite\" \"pnpm run electron-dev\""
   },
   "dependencies": {
-    "electron": "^31.0.0",
     "lucide-react": "^0.511.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
@@ -25,6 +30,7 @@
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "cross-env-shell": "^7.0.3",
+    "electron": "^31.0.0",
     "electron-builder": "^26.0.12",
     "init": "^0.1.2",
     "npx": "^10.2.2",
@@ -34,6 +40,18 @@
     "typescript": "^5.5.0",
     "vite": "^5.4.19",
     "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.aimymatrix.desktop",
+    "productName": "AIMyMatrix",
+    "files": [
+      "dist/**/*",
+      "app/src/main/**/*"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "asar": true
   },
   "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
 }

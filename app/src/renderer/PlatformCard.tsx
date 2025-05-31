@@ -9,8 +9,8 @@ interface PlatformCardProps extends PlatformItem {
     onDelete: () => void;
 }
 
-function isValidIconPath(icon: string) {
-    return typeof icon === 'string' && icon.startsWith('file://');
+function isValidIcon(icon: string) {
+    return typeof icon === 'string' && icon.startsWith('data:image/');
 }
 
 export default function PlatformCard({
@@ -24,7 +24,7 @@ export default function PlatformCard({
                                          onDelete,
                                      }: PlatformCardProps) {
     return (
-        <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow hover:shadow-xl transition-shadow duration-200 flex flex-col relative">
+        <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow hover:shadow-xl transition-shadow duration-200 flex flex-col relative border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
             <div className="absolute top-3 right-3 flex gap-1">
                 <button
                     onClick={onEdit}
@@ -42,7 +42,7 @@ export default function PlatformCard({
                 </button>
             </div>
             <div className="flex items-start p-4">
-                {isValidIconPath(icon) ? (
+                {isValidIcon(icon) ? (
                     <img
                         src={icon}
                         alt={`${name} logo`}

@@ -1,63 +1,52 @@
 # AIMyMatrix
 
-AI access App for all those wonderful tools we have been all collecting and working with
+**AIMyMatrix** is an all-in-one, cross-platform AI launcher for desktop, inspired by [Stability Matrix](https://github.com/LykosAI/StabilityMatrix).  
+It provides a beautiful, modern interface to organize and launch AI tools like InvokeAI, Automatic1111, ComfyUI, Forge, and others—each added and managed by the user.
 
-## Description
+---
 
-One solid interface, one models location, one place to start your workday access from a single view
+## 🚩 Current Milestone: Platform Icon System
 
-## Getting Started
+- **User-added tools**: Add, edit, or remove any AI tool you install, directly from the AIMyMatrix interface.
+- **Custom icons**: When configuring a tool, pick any local image file. The app converts it to a portable base64 data URL, so your icons always show up—no more file path issues!
+- **Modern UI**: All platform cards use a unified look with logo, app name, description, and quick action buttons.
+- **Live card editing**: Instantly update platform information, icon, or launch script.
+- **Dark and light modes**: UI adapts to your theme preference.
+- **Robust error handling**: Electron’s security is respected, and icons always display.
 
-### Dependencies
+---
 
-* Describe any prerequisites, designed initially for Windows 11 users, expanding to Mac and Linus.
-* libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+## 📦 Features Implemented
 
-### Installing
+- Tool platform cards (add, edit, delete, update, launch)
+- Platform icons fully portable (base64 data URLs)
+- Per-card config drawer/modal with file browsing
+- Start/stop AI tools with one click
+- Settings panel for new tool creation
+- Responsive, polished design (Tailwind, modern UX)
+- Electron-based: cross-platform desktop app (first focus: Windows 11)
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+---
 
-### Executing program
+## 🚧 Next Steps / Roadmap
 
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
+1. **Descriptor Validation**: Ensure platform configs are always valid (no missing fields, valid commands).
+2. **App Update Integration**: Implement update methods/scripts for managed tools.
+3. **Log Streaming/Console**: Live log capture from tool processes, viewable per card.
+4. **Settings and Preferences**: Save UI and platform state, remember window sizes and theme.
+5. **User Profile/Workspaces**: Organize cards by user-defined categories or workspaces.
+6. **Plugin System**: Support for user scripts, automation, or future AI platform integrations.
+7. **Multi-OS Support**: Ensure seamless use on macOS and Linux.
+8. **Auto-Detection of Installed Tools** (optional): Scan for common AI tools, offer to add.
+9. **Installer and Distribution**: Build installer for easy end-user setup.
+10. **Security & CSP Improvements**: Harden CSP and sandboxing before production.
 
-## Help
+---
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+## 🛠️ Running Locally
 
-## Authors
+See [INSTALLATION.md](INSTALLATION.md) for detailed setup, or:
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+```powershell
+pnpm install
+pnpm run dev

@@ -4,20 +4,24 @@ import * as fs from 'node:fs';
 import { PlatformManager } from './platformManager';
 import { listDescriptors, addDescriptor } from './descriptorService';
 
-// Utility: app-level icon directory
-function getIconFolder() {
-  const folder = path.join(app.getPath('userData'), 'icons');
-  fs.mkdirSync(folder, { recursive: true });
-  return folder;
+// Utility for MIME type from file extension
+function getMimeType(ext: string) {
+  switch (ext.toLowerCase()) {
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.png':
+      return 'image/png';
+    case '.gif':
+      return 'image/gif';
+    case '.ico':
+      return 'image/x-icon';
+    default:
+      return 'application/octet-stream';
+  }
 }
 
-// Only allow icons from our app icon folder
-function iconPathFromUserData(iconPath: string) {
-  const iconFolder = getIconFolder();
-  return iconPath.replace('file://', '').startsWith(iconFolder);
-}
-
-// IPC: Pick icon, copy to app folder, return file:// path
+// Only ONE handler for 'dialog:pickAndCopyIcon' - returns base64 data URL!
 ipcMain.handle('dialog:pickAndCopyIcon', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openFile'],
@@ -25,36 +29,15 @@ ipcMain.handle('dialog:pickAndCopyIcon', async () => {
   });
   if (result.canceled || !result.filePaths[0]) return null;
   const source = result.filePaths[0];
-  const iconFolder = getIconFolder();
-  const dest = path.join(iconFolder, path.basename(source));
-  fs.copyFileSync(source, dest);
-  return `file://${dest.replace(/\\/g, '/')}`;
+  const ext = path.extname(source);
+  const mime = getMimeType(ext);
+  const fileBuffer = fs.readFileSync(source);
+  const base64 = fileBuffer.toString('base64');
+  const dataUrl = `data:${mime};base64,${base64}`;
+  return dataUrl;
 });
 
-// IPC: Remove copied icon if it exists and is not used by any other card
-ipcMain.handle('icon:deleteIfUnused', async (_event, iconUrl, allIcons) => {
-  if (
-      iconUrl &&
-      typeof iconUrl === 'string' &&
-      iconUrl.startsWith('file://') &&
-      allIcons &&
-      Array.isArray(allIcons)
-  ) {
-    // Only delete if no other platform uses this icon
-    const stillUsed = allIcons.filter((i) => i === iconUrl).length > 0;
-    if (!stillUsed) {
-      const localPath = iconUrl.replace(/^file:\/\//, '');
-      try {
-        if (fs.existsSync(localPath)) {
-          fs.unlinkSync(localPath);
-        }
-      } catch (e) {
-        // Ignore errors
-      }
-    }
-  }
-  return true;
-});
+// --- Remove all icon folder utility and cleanup logic ---
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
@@ -62,6 +45,7 @@ app.commandLine.appendSwitch('disable-gpu-compositing');
 
 ipcMain.handle('descriptor:list', () => listDescriptors());
 ipcMain.handle('descriptor:add', (_e, desc) => addDescriptor(desc));
+
 ipcMain.handle('dialog:openFile', async (_event, opts) => {
   let properties: ('openFile' | 'openDirectory')[] = ['openFile'];
   let filters: Electron.FileFilter[] = [];
@@ -100,6 +84,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: false, // OK in dev, but remove for production
     },
   });
 

@@ -9,9 +9,9 @@ interface SettingsDrawerProps {
     onClose: () => void;
 }
 
-function isValidIconPath(icon: string) {
-    // Only allow our userData/icons path
-    return typeof icon === 'string' && icon.startsWith('file://');
+function isValidIcon(icon: string) {
+    // Accepts data URLs only
+    return typeof icon === 'string' && icon.startsWith('data:image/');
 }
 
 export default function SettingsDrawer({
@@ -28,10 +28,10 @@ export default function SettingsDrawer({
 
     if (!isOpen) return null;
 
-    // Always copy icon to app's icons directory
+    // Always loads and encodes icon as base64 data URL
     const browseIcon = async (): Promise<void> => {
-        const iconPath = await api.invoke('dialog:pickAndCopyIcon');
-        if (iconPath) setIcon(iconPath);
+        const iconDataUrl = await api.invoke('dialog:pickAndCopyIcon');
+        if (iconDataUrl) setIcon(iconDataUrl);
     };
 
     const browseDirectory = async (): Promise<void> => {
@@ -56,7 +56,7 @@ export default function SettingsDrawer({
         e.preventDefault();
         const desc: PlatformDescriptor = {
             name,
-            icon: isValidIconPath(icon) ? icon : '', // Only allow in-folder icons
+            icon: isValidIcon(icon) ? icon : '',
             command,
             cwd,
             description,
@@ -77,7 +77,7 @@ export default function SettingsDrawer({
                 className="absolute inset-0 bg-black bg-opacity-50"
                 onClick={onClose}
             />
-            <div className="relative ml-auto w-80 h-full bg-white dark:bg-gray-900 shadow-lg p-4 overflow-auto">
+            <div className="relative ml-auto w-80 h-full bg-white dark:bg-gray-900 shadow-lg p-4 overflow-auto text-gray-900 dark:text-gray-100">
                 <button
                     className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 dark:text-gray-100 dark:hover:text-white"
                     onClick={onClose}
@@ -98,31 +98,31 @@ export default function SettingsDrawer({
                         />
                     </label>
                     <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
-                        Icon (Only images picked using Browse are allowed)
+                        Icon (only images picked using Browse are allowed)
                         <div className="flex items-center gap-2">
                             <input
                                 className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                                 value={icon}
                                 readOnly
-                                placeholder="Icon file path"
+                                placeholder="Icon will be shown here"
                             />
                             <button
                                 type="button"
-                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-100"
                                 onClick={browseIcon}
                             >
                                 Browse
                             </button>
-                            {icon && isValidIconPath(icon) && (
+                            {icon && isValidIcon(icon) && (
                                 <img
                                     src={icon}
                                     alt="icon preview"
-                                    className="ml-2 w-8 h-8 object-contain rounded border"
+                                    className="ml-2 w-8 h-8 object-contain rounded border border-gray-200 dark:border-gray-700"
                                 />
                             )}
                         </div>
-                        {!isValidIconPath(icon) && icon && (
-                            <span className="text-xs text-red-500">Only images copied into the app's icon folder are supported.</span>
+                        {!isValidIcon(icon) && icon && (
+                            <span className="text-xs text-red-500">Only images picked using Browse (data URLs) are supported.</span>
                         )}
                     </label>
                     <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
@@ -137,7 +137,7 @@ export default function SettingsDrawer({
                             />
                             <button
                                 type="button"
-                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-100"
                                 onClick={browseDirectory}
                             >
                                 Browse
@@ -156,7 +156,7 @@ export default function SettingsDrawer({
                             />
                             <button
                                 type="button"
-                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-100"
                                 onClick={browseCommand}
                             >
                                 Browse
@@ -183,7 +183,7 @@ export default function SettingsDrawer({
                             />
                             <button
                                 type="button"
-                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-200"
+                                className="px-3 bg-gray-200 dark:bg-gray-700 border rounded-r text-gray-700 dark:text-gray-100"
                                 onClick={browseUpdateMethod}
                             >
                                 Browse
