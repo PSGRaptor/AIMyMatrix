@@ -1,7 +1,3 @@
-// --------------------------------------------------------------------
-// SettingsDrawer.tsx — add new tool via form
-// Path: app/src/renderer/SettingsDrawer.tsx
-// --------------------------------------------------------------------
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { api } from '@/bridge';
@@ -11,6 +7,11 @@ import type { PlatformDescriptor } from '@common/ipcTypes';
 interface SettingsDrawerProps {
     isOpen: boolean;
     onClose: () => void;
+}
+
+function isValidIconPath(icon: string) {
+    // Only allow our userData/icons path
+    return typeof icon === 'string' && icon.startsWith('file://');
 }
 
 export default function SettingsDrawer({
@@ -27,29 +28,25 @@ export default function SettingsDrawer({
 
     if (!isOpen) return null;
 
-    // Browse for icon file
+    // Always copy icon to app's icons directory
     const browseIcon = async (): Promise<void> => {
-        const filePath = await api.invoke('dialog:openFile', { type: 'image' });
-        if (filePath) setIcon(filePath);
+        const iconPath = await api.invoke('dialog:pickAndCopyIcon');
+        if (iconPath) setIcon(iconPath);
     };
 
-    // Browse for working directory
     const browseDirectory = async (): Promise<void> => {
         const dirPath = await api.invoke('dialog:openFile', { type: 'dir' });
         if (dirPath) setCwd(dirPath);
     };
 
-    // Browse for command (.bat, .cmd, .exe, .sh, etc.)
     const browseCommand = async (): Promise<void> => {
         const filePath = await api.invoke('dialog:openFile', { type: 'bat' });
         if (filePath) {
             setCommand(filePath);
-            // Set working directory as directory containing the file
             setCwd(filePath.replace(/[/\\][^/\\]+$/, ''));
         }
     };
 
-    // Browse for update script
     const browseUpdateMethod = async (): Promise<void> => {
         const filePath = await api.invoke('dialog:openFile', { type: 'bat' });
         if (filePath) setUpdateMethod(filePath);
@@ -59,7 +56,7 @@ export default function SettingsDrawer({
         e.preventDefault();
         const desc: PlatformDescriptor = {
             name,
-            icon,
+            icon: isValidIconPath(icon) ? icon : '', // Only allow in-folder icons
             command,
             cwd,
             description,
@@ -101,13 +98,13 @@ export default function SettingsDrawer({
                         />
                     </label>
                     <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
-                        Icon (emoji or file URL)
-                        <div className="flex">
+                        Icon (Only images picked using Browse are allowed)
+                        <div className="flex items-center gap-2">
                             <input
                                 className="flex-1 mt-1 p-2 border rounded-l text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                                 value={icon}
-                                onChange={(e) => setIcon(e.target.value)}
-                                placeholder="Emoji or file path"
+                                readOnly
+                                placeholder="Icon file path"
                             />
                             <button
                                 type="button"
@@ -116,7 +113,17 @@ export default function SettingsDrawer({
                             >
                                 Browse
                             </button>
+                            {icon && isValidIconPath(icon) && (
+                                <img
+                                    src={icon}
+                                    alt="icon preview"
+                                    className="ml-2 w-8 h-8 object-contain rounded border"
+                                />
+                            )}
                         </div>
+                        {!isValidIconPath(icon) && icon && (
+                            <span className="text-xs text-red-500">Only images copied into the app's icon folder are supported.</span>
+                        )}
                     </label>
                     <label className="flex flex-col text-sm text-gray-700 dark:text-gray-300">
                         Working Directory

@@ -7,34 +7,36 @@ interface PlatformStore {
     loadDescriptors: () => Promise<void>;
     toggleRunning: (name: string) => void;
     deletePlatform: (name: string) => void;
-    // ...add any other actions you need
+    updatePlatform: (updated: PlatformItem) => Promise<void>;
 }
 
 export const usePlatformStore = create<PlatformStore>((set, get) => ({
     platforms: [],
-
-    // Load platforms from backend
     loadDescriptors: async () => {
         const list = await api.invoke('descriptor:list');
-        set({ platforms: list ?? [] });
+        set({ platforms: list || [] });
     },
-
-    // Toggle running state in UI only (could be improved to persist)
-    toggleRunning: (name) =>
+    toggleRunning: (name) => {
         set((state) => ({
             platforms: state.platforms.map((p) =>
                 p.name === name ? { ...p, running: !p.running } : p
             ),
-        })),
-
-    // Delete a platform from the UI and (optionally) from backend
-    deletePlatform: (name) => {
-        // Remove from local state
+        }));
+    },
+    deletePlatform: async (name) => {
+        const icon = get().platforms.find((p) => p.name === name)?.icon;
         set((state) => ({
             platforms: state.platforms.filter((p) => p.name !== name),
         }));
-
-        // Optionally, notify backend to delete the platform's config file:
-        api.invoke('descriptor:delete', name);
+        if (icon) {
+            // After updating state, pass all remaining icons to the backend for cleanup
+            const iconsStillUsed = get().platforms.filter((p) => p.name !== name).map((p) => p.icon);
+            await api.invoke('icon:deleteIfUnused', icon, iconsStillUsed);
+        }
+        await api.invoke('descriptor:delete', name);
+    },
+    updatePlatform: async (updated) => {
+        await api.invoke('descriptor:update', updated);
+        get().loadDescriptors();
     },
 }));

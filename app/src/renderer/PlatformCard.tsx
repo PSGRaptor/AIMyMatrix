@@ -9,12 +9,8 @@ interface PlatformCardProps extends PlatformItem {
     onDelete: () => void;
 }
 
-function resolveIconUrl(icon: string) {
-    // Is it an absolute local path (windows or unix)?
-    if (/^[a-zA-Z]:[\\/]/.test(icon) || icon.startsWith('/')) {
-        return `file://${icon.replace(/\\/g, '/')}`;
-    }
-    return icon; // emoji or http/https
+function isValidIconPath(icon: string) {
+    return typeof icon === 'string' && icon.startsWith('file://');
 }
 
 export default function PlatformCard({
@@ -46,11 +42,17 @@ export default function PlatformCard({
                 </button>
             </div>
             <div className="flex items-start p-4">
-                <img
-                    src={resolveIconUrl(icon)}
-                    alt={`${name} logo`}
-                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-                />
+                {isValidIconPath(icon) ? (
+                    <img
+                        src={icon}
+                        alt={`${name} logo`}
+                        className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                    />
+                ) : (
+                    <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-3xl text-gray-400">
+                        <span>🖼️</span>
+                    </div>
+                )}
                 <div className="ml-4 flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {name}

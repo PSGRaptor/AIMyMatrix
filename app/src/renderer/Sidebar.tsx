@@ -1,47 +1,31 @@
-// --------------------------------------------------------------------
-// Sidebar.tsx — navigates platforms + opens Settings
-// Path: app/src/renderer/Sidebar.tsx
-// --------------------------------------------------------------------
-import React, { useEffect } from 'react';
-import { api } from '@/bridge';
-import PlatformCard from '@/PlatformCard';
+import React from 'react';
 import { usePlatformStore } from './store';
-import type { PlatformItem } from '@common/ipcTypes';
+import { Cog } from 'lucide-react';
 
 interface SidebarProps {
     onOpenSettings: () => void;
 }
 
 export default function Sidebar({ onOpenSettings }: SidebarProps) {
-    const platforms = usePlatformStore((state) => state.platforms);
-    const loadDescriptors = usePlatformStore((state) => state.loadDescriptors);
-    const toggleRunning = usePlatformStore((state) => state.toggleRunning);
-
-    useEffect(() => {
-        loadDescriptors();
-    }, [loadDescriptors]);
+    const platforms = usePlatformStore((s) => s.platforms);
 
     return (
-        <aside className="flex flex-col w-56 border-r h-full p-2 gap-2 bg-white dark:bg-gray-800">
-            {platforms.map((platform: PlatformItem) => (
-                <PlatformCard
-                    key={platform.name}
-                    {...platform}
-                    onClick={() => {
-                        api.invoke(
-                            platform.running ? 'platform:stop' : 'platform:start',
-                            platform.name
-                        );
-                        toggleRunning(platform.name);
-                    }}
-                />
+        <aside className="flex flex-col w-16 bg-white dark:bg-gray-800 border-r p-2 gap-2">
+            {platforms.map((p) => (
+                <button
+                    key={p.name}
+                    title={p.name}
+                    className="w-12 h-12 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                >
+                    <img src={p.icon} alt={p.name} className="w-8 h-8 object-cover" />
+                </button>
             ))}
-
             <button
-                className="mt-auto px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                className="mt-auto w-12 h-12 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                 onClick={onOpenSettings}
+                title="Settings"
             >
-                Settings
+                <Cog size={20} className="text-gray-600 dark:text-gray-300" />
             </button>
         </aside>
     );

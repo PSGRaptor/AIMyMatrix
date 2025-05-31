@@ -1,8 +1,8 @@
 {
   "name": "InvokeAI",
-  "icon": "🤖",
+  "icon": "Z:\\Google\\My Drive\\_icons\\Instant-Style.png",
   "command": "invoke.bat",
   "cwd": "Y:\\_invokeai\\",
-  "description": "InvokeAI Stable Diffusion command-line UI",
+  "description": "InvokeAI Stable Diffusion GUI",
   "updateMethod": "https://github.com/invoke-ai/InvokeAI/releases/latest/download/InvokeAI.zip"
 }
